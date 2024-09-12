@@ -63,47 +63,47 @@ contract BFXSea is ERC721Enumerable, Ownable {
         feeRecipient = newRecipient;
     }
 
-    function createNFT(
-        bytes32 name,
-        bytes32 description,
-        bytes32 tokenUri,
-        uint256 price,
-        Category category,
-        uint256 supply
-    ) public payable {
-        uint256 creationFee = isMainnet ? CREATION_FEE_MAINNET : CREATION_FEE_TESTNET;
-        if (msg.value < creationFee) {
-            revert BFXSea__InsufficientCreationFee();
-        }
-
-        uint256 newTokenId = s_tokenCounter;
-        s_tokenCounter++;
-
-        NFT memory newNFT = NFT({
-            name: name,
-            description: description,
-            tokenUri: tokenUri,
-            price: price,
-            creator: payable(msg.sender),
-            owner: payable(msg.sender),
-            createdAt: block.timestamp,
-            category: category,
-            isForSale: true,
-            supply: supply,
-            minted: 1
-        });
-
-        s_tokenIdToNFT[newTokenId] = newNFT;
-        s_creatorToTokenIds[msg.sender].push(newTokenId);
-        s_ownerToTokenIds[msg.sender].push(newTokenId);
-
-        _safeMint(msg.sender, newTokenId);
-
-        emit NFTCreated(newTokenId, msg.sender, name, price, supply);
-
-        feeRecipient.transfer(creationFee);
+function createNFT(
+    bytes32 name,
+    bytes32 description,
+    bytes32 tokenUri,
+    uint256 price,
+    Category category,
+    uint256 supply
+) public payable {
+    uint256 creationFee = isMainnet ? CREATION_FEE_MAINNET : CREATION_FEE_TESTNET;
+    uint256 totalFee = creationFee * supply;
+    if (msg.value < totalFee) {
+        revert BFXSea__InsufficientCreationFee();
     }
 
+    uint256 newTokenId = s_tokenCounter;
+    s_tokenCounter++;
+
+    NFT memory newNFT = NFT({
+        name: name,
+        description: description,
+        tokenUri: tokenUri,
+        price: price,
+        creator: payable(msg.sender),
+        owner: payable(msg.sender),
+        createdAt: block.timestamp,
+        category: category,
+        isForSale: true,
+        supply: supply,
+        minted: 1
+    });
+
+    s_tokenIdToNFT[newTokenId] = newNFT;
+    s_creatorToTokenIds[msg.sender].push(newTokenId);
+    s_ownerToTokenIds[msg.sender].push(newTokenId);
+
+    _safeMint(msg.sender, newTokenId);
+
+    emit NFTCreated(newTokenId, msg.sender, name, price, supply);
+
+    feeRecipient.transfer(totalFee);
+}
     function mintNFT(uint256 tokenId) public {
         NFT storage nft = s_tokenIdToNFT[tokenId];
         if (nft.minted >= nft.supply) {
@@ -225,4 +225,5 @@ contract BFXSea is ERC721Enumerable, Ownable {
         }
         return string(bytesArray);
     }
+    
 }

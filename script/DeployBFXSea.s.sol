@@ -6,24 +6,24 @@ import {BFXSea} from "../src/BFXSea.sol";
 import {console} from "forge-std/console.sol";
 
 contract DeployBFXSea is Script {
-    uint256 public DEFAULT_ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-    uint256 public deployerKey;
-
     function run() external returns (BFXSea) {
-        if (block.chainid == 31337) {
-            deployerKey = DEFAULT_ANVIL_PRIVATE_KEY;
-        } else {
-            deployerKey = vm.envUint("PRIVATE_KEY");
-        }
+        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
+        address deployerAddress = vm.addr(deployerKey);
+
+        console.log("Deploying BFXSea contract with address:", deployerAddress);
 
         vm.startBroadcast(deployerKey);
         
         // Determine if we're deploying to mainnet or testnet
-        bool isMainnet = (block.chainid == 1); // Ethereum mainnet
+        // For Sepolia testnet, this should be false
+        bool isMainnet = false;
 
         BFXSea bfxSea = new BFXSea(isMainnet);
         
         vm.stopBroadcast();
+        
+        console.log("BFXSea deployed at:", address(bfxSea));
+        console.log("Is Mainnet:", isMainnet);
         
         return bfxSea;
     }
